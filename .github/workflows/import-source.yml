@@ -31,7 +31,6 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: 20
-          cache: npm
 
       - name: Install dependencies and create lockfile
         run: npm install --no-audit --no-fund
@@ -43,7 +42,6 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: 22
-          cache: npm
 
       - name: Reinstall from lockfile on Node.js 22
         shell: bash
