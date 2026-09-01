@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20, 22]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Production build
+        run: npm run build
+
+      - name: Validate version
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION_FILE="$(tr -d '[:space:]' < VERSION)"
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+          test "$VERSION_FILE" = "$PACKAGE_VERSION"
+          grep -Fq "$VERSION_FILE" CHANGELOG.md
+
+      - name: Repository hygiene
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git ls-files | grep -E '(^|/)(node_modules|dist|\.vite)(/|$)|(^|/)\.env$|\.log$'; then
+            echo "::error::Generated/private file is tracked."
+            exit 1
+          fi
+          if git grep -nEi '(GEMINI_API_KEY|process\.env\.API_KEY|AIza[0-9A-Za-z_-]{20,}|SUPABASE_SERVICE_ROLE|service_role)' -- \
+            '*.ts' '*.tsx' '*.js' '*.jsx' '*.json' '*.html' '*.css' '*.gs' '*.sql' '.env.example'; then
+            echo "::error::Removed AI/credential reference detected."
+            exit 1
+          fi
+          test ! -f sw.js
+          test ! -f metadata.json
+          test ! -f bun.lock
+
+      - name: Validate canonical cloud templates
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq "../Code.gs?raw" services/cloudSync.ts
+          grep -Fq "../schema.sql?raw" services/cloudSync.ts
+          test "$(grep -RIl 'function doPost(e)' --include='*.gs' . | wc -l)" -eq 1
+
+      - name: Validate PWA
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s public/sw.js
+          test -s public/manifest.webmanifest
+          test -s public/icon.svg
+          grep -Fq './manifest.webmanifest' index.html
+          ! grep -Eq 'cdn\.tailwindcss\.com|fonts\.googleapis\.com|picsum\.photos' index.html public/manifest.webmanifest
