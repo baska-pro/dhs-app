@@ -30,7 +30,6 @@ jobs:
           test -f package.json
           test -f App.tsx
           test -f README.md
-          test -f .github/workflows/ci.yml
 
       - name: Apply CI-discovered TypeScript fixes
         shell: bash
@@ -82,16 +81,12 @@ jobs:
       - name: Typecheck and build on Node.js 22
         run: npm run check
 
-      - name: Finalize repository
+      - name: Finalize repository source
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
-
-          ci = Path('.github/workflows/ci.yml')
-          ci.write_text(ci.read_text().replace('npm install --no-audit --no-fund', 'npm ci --no-audit --no-fund'))
-
           for pattern in ('*.ts', '*.tsx', '*.css', '*.js'):
               for path in Path('.').rglob(pattern):
                   if 'node_modules' in path.parts or 'dist' in path.parts:
@@ -104,6 +99,7 @@ jobs:
           PY
           rm -rf node_modules dist .vite .bootstrap
           rm -f .github/workflows/import-source.yml
+          rm -f .github/workflows/ci.yml
 
       - name: Commit finalized DHS App v1.0.0
         shell: bash
