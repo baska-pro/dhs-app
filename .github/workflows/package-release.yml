@@ -1,0 +1,39 @@
+name: Package Release
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Create release ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          git archive \
+            --format=zip \
+            --prefix="DHS-App-v${VERSION}/" \
+            --output="DHS-App-v${VERSION}.zip" \
+            HEAD
+          sha256sum "DHS-App-v${VERSION}.zip" > "DHS-App-v${VERSION}.zip.sha256"
+
+      - name: Upload release package
+        uses: actions/upload-artifact@v4
+        with:
+          name: DHS-App-v1.0.0-release
+          path: |
+            DHS-App-v*.zip
+            DHS-App-v*.zip.sha256
+          if-no-files-found: error
+          retention-days: 90
