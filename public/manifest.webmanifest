@@ -1,0 +1,25 @@
+{
+  "name": "DHS App \u2014 Daily Habit System",
+  "short_name": "DHS App",
+  "description": "Local-first progressive daily habit tracker dengan pengingat shalat, poin, statistik, backup/restore, dan cloud sync opsional.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#0d9488",
+  "lang": "id-ID",
+  "orientation": "portrait-primary",
+  "categories": [
+    "lifestyle",
+    "productivity"
+  ],
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

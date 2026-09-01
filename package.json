@@ -1,0 +1,33 @@
+{
+  "name": "dhs-app",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Local-first progressive daily habit tracker with prayer reminders, points, statistics, backup/restore, and optional Google Sheets or Supabase sync.",
+  "scripts": {
+    "dev": "vite",
+    "typecheck": "tsc --noEmit",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "npm run typecheck && npm run build"
+  },
+  "dependencies": {
+    "lucide-react": "0.473.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "recharts": "2.15.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.0",
+    "@types/node": "^22.14.0",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.0.0",
+    "tailwindcss": "^4.1.0",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  }
+}

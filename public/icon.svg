@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="DHS App">
+  <rect width="512" height="512" rx="120" fill="#0d9488"/>
+  <path d="M343 94c-82 18-142 91-142 178 0 69 38 130 94 162-98-7-175-89-175-189 0-105 85-190 190-190 12 0 23 1 33 3z" fill="#f8fafc"/>
+  <path d="m258 265 42 42 82-93" fill="none" stroke="#facc15" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
