@@ -88,10 +88,19 @@ jobs:
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
-          p = Path('.github/workflows/ci.yml')
-          s = p.read_text()
-          s = s.replace('npm install --no-audit --no-fund', 'npm ci --no-audit --no-fund')
-          p.write_text(s)
+
+          ci = Path('.github/workflows/ci.yml')
+          ci.write_text(ci.read_text().replace('npm install --no-audit --no-fund', 'npm ci --no-audit --no-fund'))
+
+          for pattern in ('*.ts', '*.tsx', '*.css', '*.js'):
+              for path in Path('.').rglob(pattern):
+                  if 'node_modules' in path.parts or 'dist' in path.parts:
+                      continue
+                  text = path.read_text()
+                  cleaned = '\n'.join(line.rstrip() for line in text.splitlines())
+                  if text.endswith('\n'):
+                      cleaned += '\n'
+                  path.write_text(cleaned)
           PY
           rm -rf node_modules dist .vite .bootstrap
           rm -f .github/workflows/import-source.yml
