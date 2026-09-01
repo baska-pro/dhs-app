@@ -1,0 +1,81 @@
+name: Import Source
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.bootstrap/source.tar.gz'
+      - '.github/workflows/import-source.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  import-validate-finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout bootstrap commit
+        uses: actions/checkout@v5
+
+      - name: Extract audited source snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar -xzf .bootstrap/source.tar.gz -C .
+          test -f package.json
+          test -f App.tsx
+          test -f README.md
+          test -f .github/workflows/ci.yml
+
+      - name: Validate on Node.js 20
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies and create lockfile
+        run: npm install --no-audit --no-fund
+
+      - name: Typecheck and build on Node.js 20
+        run: npm run check
+
+      - name: Validate on Node.js 22
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Reinstall from lockfile on Node.js 22
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf node_modules dist .vite
+          npm ci --no-audit --no-fund
+
+      - name: Typecheck and build on Node.js 22
+        run: npm run check
+
+      - name: Finalize reproducible CI configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('.github/workflows/ci.yml')
+          s = p.read_text()
+          s = s.replace('npm install --no-audit --no-fund', 'npm ci --no-audit --no-fund')
+          p.write_text(s)
+          PY
+          rm -rf node_modules dist .vite .bootstrap
+          rm -f .github/workflows/import-source.yml
+
+      - name: Commit finalized DHS App v1.0.0
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'Release DHS App v1.0.0'
+          git push origin HEAD:main
