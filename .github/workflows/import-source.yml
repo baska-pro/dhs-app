@@ -4,8 +4,9 @@ on:
   push:
     branches: [main]
     paths:
-      - '.bootstrap/source.tar.gz'
+      - '.bootstrap/chunks/**'
       - '.github/workflows/import-source.yml'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -14,20 +15,24 @@ jobs:
   import-validate-finalize:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout bootstrap commit
+      - name: Checkout staged source
         uses: actions/checkout@v5
 
-      - name: Extract audited source snapshot
+      - name: Reconstruct and verify audited source
         shell: bash
         run: |
           set -euo pipefail
-          tar -xzf .bootstrap/source.tar.gz -C .
+          cat .bootstrap/chunks/chunk_*.part > /tmp/dhs-source.b64
+          echo 'ccc9952c51a9f5c718d5990662656c52f8b310f2809ee1899b3380533899505e  /tmp/dhs-source.b64' | sha256sum -c -
+          base64 -d /tmp/dhs-source.b64 > /tmp/dhs-source.tar.xz
+          echo 'f1bb3db2f4839842c56d35bec61af7e9eaca795f7681fe944a4fe74dd8fb18a1  /tmp/dhs-source.tar.xz' | sha256sum -c -
+          tar -xJf /tmp/dhs-source.tar.xz -C .
           test -f package.json
           test -f App.tsx
           test -f README.md
           test -f .github/workflows/ci.yml
 
-      - name: Validate on Node.js 20
+      - name: Set up Node.js 20
         uses: actions/setup-node@v5
         with:
           node-version: 20
@@ -38,7 +43,7 @@ jobs:
       - name: Typecheck and build on Node.js 20
         run: npm run check
 
-      - name: Validate on Node.js 22
+      - name: Set up Node.js 22
         uses: actions/setup-node@v5
         with:
           node-version: 22
@@ -53,7 +58,7 @@ jobs:
       - name: Typecheck and build on Node.js 22
         run: npm run check
 
-      - name: Finalize reproducible CI configuration
+      - name: Finalize repository
         shell: bash
         run: |
           set -euo pipefail
